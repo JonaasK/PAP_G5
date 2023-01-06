@@ -22,6 +22,79 @@ from skimage import io
 from datetime import datetime, timedelta
 import numpy as np
 import re
+import requests
+
+global objecto_principal
+
+objecto_principal = {
+    "turma": "",
+    "versao": "",
+    "horario": [
+        {
+            "dia": "segunda",
+            "info": [
+
+            ]
+        },
+        {
+            "dia": "terca",
+            "info": [
+            ]
+        },
+        {
+            "dia": "quarta",
+            "info": [
+            ]
+        },
+        {
+            "dia": "quinta",
+            "info": [
+            ]
+        },
+        {
+            "dia": "sexta",
+            "info": [
+            ]
+        }
+    ]
+}
+
+
+def limparObjecto():
+
+    objecto_principal = {
+        "turma": "",
+        "versao": "",
+        "horario": [
+            {
+                "dia": "segunda",
+                "info": [
+
+                ]
+            },
+            {
+                "dia": "terca",
+                "info": [
+                ]
+            },
+            {
+                "dia": "quarta",
+                "info": [
+                ]
+            },
+            {
+                "dia": "quinta",
+                "info": [
+                ]
+            },
+            {
+                "dia": "sexta",
+                "info": [
+                ]
+            }
+        ]
+    }
+    return objecto_principal
 
 
 def recolha_de_horario():
@@ -29,16 +102,16 @@ def recolha_de_horario():
     tempo_agora = datetime.now()
 
     for x in range(5):
-        tempo = tempo_agora + timedelta(days=y)
-        tempo = tempo.strftime('%Y_%m_%d')
-        # tempo = '2023_01_03'
+        # tempo = tempo_agora + timedelta(days=y)
+        # tempo = tempo.strftime('%Y_%m_%d')
+        tempo = '2023_01_03'
 
         try:
-            url = f"https://www.valdorio.net/images/pdfs/Individual_Turmas_{tempo}.pdf"
-            urllib.request.urlretrieve(url, "pdf_Horario.pdf")
+            url_pdf = f"https://www.valdorio.net/images/pdfs/Individual_Turmas_{tempo}.pdf"
+            urllib.request.urlretrieve(url_pdf, "pdf_Horario.pdf")
             verificacao = 1
         except:
-            print(url)
+            print(url_pdf)
             y += 1
             verificacao = 0
 
@@ -79,7 +152,7 @@ def dividir_pdf(verificacao, tempo):
 def horario(y1, y2, x1, x2, i):
     status = io.imread("Img_Processada_" + str(i) + '.jpeg')
     imagem_cortada = status[y1:y2, x1:x2]
-    cv2.imshow("Original", imagem_cortada)
+    # cv2.imshow("Original", imagem_cortada)
     # cv2.waitKey(0)
     margem = cv2.Canny(imagem_cortada, 50, 150)
     linhas = cv2.HoughLinesP(margem, 1, np.pi / 180, 100, minLineLength=100, maxLineGap=10)
@@ -88,7 +161,12 @@ def horario(y1, y2, x1, x2, i):
     string_turma = string_turma.replace('__', '')
     string_turma = string_turma.replace('_', '')
     string_turma = string_turma.replace('—', '')
+    string_turma = string_turma.replace('  ', ' ')
+    string_turma = string_turma.replace('   ', ' ')
+    string_turma = string_turma.replace('Vestudo', ' ')
     string_turma = string_turma.replace('\n', ' ')
+    teste = len(string_turma)
+    print(teste)
     arr = string_turma.split(' ')
     while "" in arr:
         arr.remove("")
@@ -107,91 +185,120 @@ def horario(y1, y2, x1, x2, i):
                 pos = pos + 1
                 parte1 = string_turma[:pos]
                 parte2 = string_turma[pos:]
-                print(parte1)
-                print(parte2)
             else:
-                print(string_turma)
                 horas = 1
         else:
-            print(string_turma)
-            print(string_turma)
             horas = 2
     return string_turma, horas
 
 
-def JSON_Turma(i):
-    dados = {
-        'turma': Turmas(i),
-    }
-    dados_json = json.dumps(dados)
-    return dados_json
-
-
-def JSON_Blocos(string_turma, horas):
-    dados_json2 = 0
+def Dados_Blocos(string_turma, horas, dias):
+    string_turma = string_turma.replace('  ', ' ')
     if horas == 2:
         string_dividida = string_turma.split()
-        dados = {
-            'disciplina': string_dividida[0],
-            'professor': string_dividida[1],
-            'sala': string_dividida[2]
-        }
-        dados_json = json.dumps(dados)
-        dados_json2 = json.dumps(dados)
+        #print(string_dividida)
+        if len(string_turma) < 2:
+            dados = {
+                'disciplina': string_dividida[0],
+                'professor': " ",
+                'sala': " "
+            }
+        else:
+            if len(string_turma) < 9:
+                dados = {
+                    'disciplina': string_dividida[0],
+                    'professor': " ",
+                    'sala': string_dividida[1]
+                }
+            else:
+                dados = {
+                    'disciplina': string_dividida[0],
+                    'professor': string_dividida[1],
+                    'sala': string_dividida[2]
+                }
+        objecto_principal["horario"][dias]["info"].append(dados)
+        objecto_principal["horario"][dias]["info"].append(dados)
     else:
         if horas == 0:
-            dados = {
-                'disciplina': '',
-                'professor': '',
-                'sala': ''
-            }
-            dados_json = json.dumps(dados)
+            print("Não tem aula")
         else:
             if string_turma.count(' ') > 4:
                 pos = -1
                 count = 0
+                string_turma.replace('  ', ' ')
                 while count < 3:
                     pos = string_turma.find(' ', pos + 1)
                     count += 1
                 pos = pos + 1
                 parte1 = string_turma[:pos]
                 parte2 = string_turma[pos:]
+                part2 = parte2.strip()
                 print(parte1)
                 string_dividida = parte1.split()
-                dados1 = {
-                    'disciplina': string_dividida[0],
-                    'professor': string_dividida[1],
-                    'sala': string_dividida[2]
-                }
-                dados_json = json.dumps(dados1)
+                if len(string_turma) < 2:
+                    dados1 = {
+                        'disciplina': string_dividida[0],
+                        'professor': " ",
+                        'sala': ""
+                    }
+                else:
+                    if len(string_turma) < 9:
+                        dados1 = {
+                            'disciplina': string_dividida[0],
+                            'professor': " ",
+                            'sala': string_dividida[1]
+                        }
+                    else:
+                        dados1 = {
+                            'disciplina': string_dividida[0],
+                            'professor': string_dividida[1],
+                            'sala': string_dividida[2]
+                        }
+                objecto_principal["horario"][dias]["info"].append(dados1)
                 print(parte2)
-                string_dividida = parte2.split()
-                dados2 = {
-                    'disciplina': string_dividida[0],
-                    'professor': string_dividida[1],
-                    'sala': string_dividida[2]
-                }
-                dados_json2 = json.dumps(dados2)
+                if len(string_turma) < 2:
+                    dados2 = {
+                        'disciplina': string_dividida[0],
+                        'professor': " ",
+                        'sala': ""
+                    }
+                else:
+                    if len(string_turma) < 9:
+                        dados2 = {
+                            'disciplina': string_dividida[0],
+                            'professor': " ",
+                            'sala': string_dividida[1]
+                        }
+                    else:
+                        dados2 = {
+                            'disciplina': string_dividida[0],
+                            'professor': string_dividida[1],
+                            'sala': string_dividida[2]
+                        }
+                objecto_principal["horario"][dias]["info"].append(dados2)
             else:
                 print(string_turma)
                 string_dividida = string_turma.split()
-                dados = {
-                    'disciplina': string_dividida[0],
-                    'professor': string_dividida[1],
-                    'sala': string_dividida[2]
-                }
-                dados_json = json.dumps(dados)
-
-    return dados_json, dados_json2
-
-
-def JSON_Dia(d):
-    dia = ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta']
-    dados = {
-        'dia': dia[d]
-    }
-    dados_json = json.dumps(dados)
-    return dados_json
+                if len(string_turma) < 2:
+                    dados = {
+                        'disciplina': string_dividida[0],
+                        'professor': " ",
+                        'sala': ""
+                    }
+                else:
+                    if len(string_turma) < 9:
+                        dados = {
+                            'disciplina': string_dividida[0],
+                            'professor': " ",
+                            'sala': string_dividida[1]
+                        }
+                    else:
+                        dados = {
+                            'disciplina': string_dividida[0],
+                            'professor': string_dividida[1],
+                            'sala': string_dividida[2]
+                        }
+                objecto_principal["horario"][dias]["info"].append(dados)
 
 
 def Turmas(i):
@@ -200,7 +307,9 @@ def Turmas(i):
     nome_turmas = pytesseract.image_to_string(imagem_turma, config='--psm 6 -c preserve_interword_spaces=1')
     nome_turmas = nome_turmas.replace('\n', '')
     nome_turmas = nome_turmas.replace(' ', '')
-    print(nome_turmas)
+    # os.chdir(f"C:\\Users\\joaop\\Desktop\\Horarios_New\\{tempo}")
+    # imagens_turma = {'file': open(f"C:\\Users\\joaop\\Desktop\\Horarios_New\\{tempo}\\" + nome_turmas + "_" + tempo + ".jpeg", 'rb')}
+    # print(nome_turmas)
 
     return nome_turmas
 
@@ -208,8 +317,9 @@ def Turmas(i):
 # --------------------------------------- MAIN --------------------------------------- #
 
 
+fim = 0
 img = 0
-D_semana = ['Segunda', 'Terca', 'Quarta', 'Quinta', 'Sexta']
+D_semana = [0, 1, 2, 3, 4]
 blocos = 0
 dias = 0
 dimensao_y1 = 455
@@ -223,14 +333,25 @@ if ver != 1:
 
 else:
     pags = dividir_pdf(ver, t)
+    pags += 1
     while img <= pags:
         while blocos < 5:
             if dias == 0:
+                if blocos == 0:
+                    if img >= 1:
+                        Dados_Json = json.dumps(objecto_principal)
+                        print(Dados_Json)
+                        objecto_principal = limparObjecto()
+                    if img >= pags:
+                        fim = 1
+                        break
                 nome_turma = Turmas(img)
-                print(nome_turma)
-            if blocos == 0:
-                print(D_semana[dias])
+                # url = ''
+                objecto_principal["turma"] = nome_turma
+                # r = requests.post(url, files=Imagem_T)
+                # print(nome_turma)
             string, H = horario(dimensao_y1, dimensao_y2, dimensao_x1, dimensao_x2, img)
+            Dados_Blocos(string, H, D_semana[dias])
             dimensao_y1 += 270
             dimensao_y2 += 265
             blocos += 1
@@ -251,3 +372,5 @@ else:
                 dias = 0
                 img += 1
                 blocos = 0
+        if fim == 1:
+            break
