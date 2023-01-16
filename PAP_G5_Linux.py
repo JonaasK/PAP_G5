@@ -12,6 +12,8 @@
 """
 
 import json
+import time
+
 import cv2
 import os
 import urllib.request
@@ -103,12 +105,12 @@ def recolha_de_horario():
     verificacao = 0
     tempo = 0
     y = 0
-    # tempo_agora = datetime.now()
+    tempo_agora = datetime.now()
 
     for x in range(5):
-        # tempo = tempo_agora + timedelta(days=y)  # somar dias ao horario do sistema
-        # tempo = tempo.strftime('%Y_%m_%d')  # definir formato da data
-        tempo = '2023_01_09'
+        tempo = tempo_agora + timedelta(days=y)  # somar dias ao horario do sistema
+        tempo = tempo.strftime('%Y_%m_%d')  # definir formato da data
+        # tempo = '2023_01_09'
 
         try:
             url_pdf = f"https://www.valdorio.net/images/pdfs/Individual_Turmas_{tempo}.pdf"  # defenir o url para retirar pdf
@@ -300,7 +302,7 @@ def connectar_API(tempo, i, dados):
     url = 'https://apphorarios.pt/horario/' + objecto_principal['turma'] + '/insert/image?token=' + token  # url para enviar dados para a API
     requests.post(url, files={'horario': open(imagem_t, 'rb')})  # enviar dados para a API
     url = 'https://apphorarios.pt/horario/' + objecto_principal['turma'] + '/insert/json?token=' + token
-    requests.post(url, data=dados)
+    requests.post(url, json=dados)
     # dados['horario'] = open(imagem_t, 'rb')
     # requests.post(url)
 
@@ -331,8 +333,10 @@ else:
                 if blocos == 0:
                     if img >= 1:
                         Dados_Json = json.dumps(objecto_principal)  # função para transformar dados da string objecto_principal em JSON
-                        connectar_API(t, img, Dados_Json)  # função para connectar a API e envia os dados
+                        stringObj = json.loads(Dados_Json)
+                        connectar_API(t, img, stringObj)  # função para connectar a API e envia os dados
                         print(Dados_Json)
+                        time.sleep(2)
                         objecto_principal = limparObjecto()  # função para limpar a string objecto_principal
                     if img >= pags:
                         fim = 1
