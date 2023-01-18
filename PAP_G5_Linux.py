@@ -13,7 +13,6 @@
 
 import json
 import time
-
 import cv2
 import os
 import urllib.request
@@ -28,7 +27,6 @@ import requests
 
 global objecto_principal
 
-# noinspection PyRedeclaration
 objecto_principal = {
     "turma": "",
     "versao": "",
@@ -99,7 +97,6 @@ def limparObjecto():  # Limpar o objecto
     return objecto_principal
 
 
-# noinspection PyBroadException
 def recolha_de_horario():
     url_pdf = 0
     verificacao = 0
@@ -131,16 +128,14 @@ def dividir_pdf(verificacao, tempo):
     if verificacao == 1:
         images = convert_from_path("pdf_Horario.pdf")  # ler o pdf
         diretorio_existe = os.path.exists(
-            f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # verificar se o diretorio existe
+            f"/root/PAP_G5/{tempo}")  # verificar se o diretorio existe
         if diretorio_existe == 1:
-            os.chdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # mudar diretorio
+            os.chdir(f"/root/PAP_G5/{tempo}")  # mudar diretorio
         else:
-            os.mkdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # criar diretorio
-            os.chdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # mudar diretorio
+            os.mkdir(f"/root/PAP_G5/{tempo}")  # criar diretorio
+            os.chdir(f"/root/PAP_G5/{tempo}")  # mudar diretorio
         for paginas in range(len(images)):
             images[paginas].save('page' + str(paginas) + '.jpeg', 'jpeg')  # salvar imagens
-        # pytesseract.pytesseract.tesseract_cmd = 'C:\\Program Files\\Tesseract-OCR\\tesseract.exe'
-
         while imagens <= paginas:
             imagem = io.imread('page' + str(imagens) + '.jpeg')  # ler imagem
             img_gray = cv2.cvtColor(imagem, cv2.COLOR_BGR2GRAY)  # imagem normal para escala de cinza
@@ -155,9 +150,9 @@ def dividir_pdf(verificacao, tempo):
 
 def horario(y1, y2, x1, x2, i):
     status = io.imread("Img_Processada_" + str(i) + '.jpeg')  # ler imagem
+    # cv2.imshow("Original", imagem_cortada)  # mostrar imagem
+    # cv2.waitKey(0)  # espera de um input do teclado para avançar
     imagem_cortada = status[y1:y2, x1:x2]  # corta a imagem com as cordenadas dadas
-    cv2.imshow("Original", imagem_cortada)  # mostrar imagem
-    cv2.waitKey(0)  # espera de um input do teclado para avançar
     margem = cv2.Canny(imagem_cortada, 50, 150)  # detectar as margens da imagem
     linhas = cv2.HoughLinesP(margem, 1, np.pi / 180, 100, minLineLength=100,
                              maxLineGap=10)  # detectar as linhas da imagem
@@ -176,7 +171,7 @@ def horario(y1, y2, x1, x2, i):
         arr.remove("")  # remover os elementos vazios da string
     if '' in string_turma and len(re.findall("[a-zA-Z]", string_turma)) == 0:
         horas = 0  # defenir hora = 0
-        print('Não tem aula')
+        # print('Não tem aula')
     else:
         if linhas is not None:
             if string_turma.count(' ') > 4:
@@ -188,12 +183,11 @@ def horario(y1, y2, x1, x2, i):
     return string_turma, horas
 
 
-# noinspection PyBroadException
+
 def Dados_Blocos(string_turma, horas, dia):
     string_turma = string_turma.replace('  ', ' ')  # remover caracteres desnecessários
     if horas == 2:
         string_dividida = string_turma.split()  # dividir string
-        # noinspection PyBroadException
         try:
             # adicionar os dados retirados
             dados = {
@@ -286,14 +280,13 @@ def Turmas(i):
     nome_turmas = nome_turmas.replace('\n', '')
     nome_turmas = nome_turmas.replace('', '')
     nome_turmas = nome_turmas.replace(' ', '')
-    # print(nome_turmas)
 
     return nome_turmas
 
 
 def connectar_API(tempo, i, dados):
     i = i - 1
-    imagem_t = f"/home/ventosa/Desktop/PAP_G5-main/{tempo}/" + Turmas(i) + "_" + tempo + ".jpeg"  # caminho para a imagem
+    imagem_t = f"/root/PAP_G5/{tempo}/" + Turmas(i) + "_" + tempo + ".jpeg"  # caminho para a imagem
     url = 'https://apphorarios.pt/api/auth'  # url para aceder a autenticação da API
     r = requests.get(url, data={'apiKey': 'D)QN#)e+Cud`9,3uL.Rh7&pJD#qvFu)N'})  # request para ter o token de acesso a API
     json_r = r.json()
@@ -303,8 +296,6 @@ def connectar_API(tempo, i, dados):
     requests.post(url, files={'horario': open(imagem_t, 'rb')})  # enviar dados para a API
     url = 'https://apphorarios.pt/horario/' + objecto_principal['turma'] + '/insert/json?token=' + token
     requests.post(url, json=dados)
-    # dados['horario'] = open(imagem_t, 'rb')
-    # requests.post(url)
 
 
 # --------------------------------------- MAIN --------------------------------------- #
@@ -334,9 +325,8 @@ else:
                     if img >= 1:
                         Dados_Json = json.dumps(objecto_principal)  # função para transformar dados da string objecto_principal em JSON
                         stringObj = json.loads(Dados_Json)
-                        connectar_API(t, img, stringObj)  # função para connectar a API e envia os dados
+                        # connectar_API(t, img, stringObj)  # função para connectar a API e envia os dados
                         print(Dados_Json)
-                        time.sleep(2)
                         objecto_principal = limparObjecto()  # função para limpar a string objecto_principal
                     if img >= pags:
                         fim = 1
