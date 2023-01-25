@@ -25,9 +25,9 @@ import numpy as np
 import re
 import requests
 
-global objecto_principal
+global objeto_principal
 
-objecto_principal = {
+objeto_principal = {
     "turma": "",
     "versao": "",
     "horario": [
@@ -61,8 +61,8 @@ objecto_principal = {
 }
 
 
-def limparObjecto():  # Limpar o objecto
-    objecto_principal = {
+def limparObjeto():  # Limpar o objeto
+    objeto_principal = {
         "turma": "",
         "versao": "",
         "horario": [
@@ -94,7 +94,7 @@ def limparObjecto():  # Limpar o objecto
             }
         ]
     }
-    return objecto_principal
+    return objeto_principal
 
 
 def recolha_de_horario():
@@ -105,9 +105,9 @@ def recolha_de_horario():
     tempo_agora = datetime.now()
 
     for x in range(5):
-        tempo = tempo_agora + timedelta(days=y)  # somar dias ao horario do sistema
-        tempo = tempo.strftime('%Y_%m_%d')  # definir formato da data
-        # tempo = '2023_01_09'
+        #tempo = tempo_agora + timedelta(days=y)  # somar dias ao horario do sistema
+        #tempo = tempo.strftime('%Y_%m_%d')  # definir formato da data
+        tempo = '2023_01_23'
 
         try:
             url_pdf = f"https://www.valdorio.net/images/pdfs/Individual_Turmas_{tempo}.pdf"  # defenir o url para retirar pdf
@@ -128,12 +128,12 @@ def dividir_pdf(verificacao, tempo):
     if verificacao == 1:
         images = convert_from_path("pdf_Horario.pdf")  # ler o pdf
         diretorio_existe = os.path.exists(
-            f"/root/PAP_G5/{tempo}")  # verificar se o diretorio existe
+            f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # verificar se o diretorio existe
         if diretorio_existe == 1:
-            os.chdir(f"/root/PAP_G5/{tempo}")  # mudar diretorio
+            os.chdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # mudar diretorio
         else:
-            os.mkdir(f"/root/PAP_G5/{tempo}")  # criar diretorio
-            os.chdir(f"/root/PAP_G5/{tempo}")  # mudar diretorio
+            os.mkdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # criar diretorio
+            os.chdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # mudar diretorio
         for paginas in range(len(images)):
             images[paginas].save('page' + str(paginas) + '.jpeg', 'jpeg')  # salvar imagens
         while imagens <= paginas:
@@ -150,12 +150,12 @@ def dividir_pdf(verificacao, tempo):
 
 def horario(y1, y2, x1, x2, i):
     status = io.imread("Img_Processada_" + str(i) + '.jpeg')  # ler imagem
-    # cv2.imshow("Original", imagem_cortada)  # mostrar imagem
-    # cv2.waitKey(0)  # espera de um input do teclado para avançar
     imagem_cortada = status[y1:y2, x1:x2]  # corta a imagem com as cordenadas dadas
     margem = cv2.Canny(imagem_cortada, 50, 150)  # detectar as margens da imagem
     linhas = cv2.HoughLinesP(margem, 1, np.pi / 180, 100, minLineLength=100,
                              maxLineGap=10)  # detectar as linhas da imagem
+    cv2.imshow("recortado", imagem_cortada)  # mostrar imagem
+    cv2.waitKey(0)  # espera de um input do teclado para avançar
     string_turma = pytesseract.image_to_string(imagem_cortada, config='--psm 6 --oem 3 -c tessedit_create_tsv=1')  # retirar os dados da imagem
     # retirar caracteres desnecessários
     string_turma = string_turma.replace('_—', ' ')
@@ -166,6 +166,8 @@ def horario(y1, y2, x1, x2, i):
     string_turma = string_turma.replace('  ', ' ')
     string_turma = string_turma.replace('', '')
     string_turma = string_turma.replace('\n', ' ')
+    string_turma = string_turma.replace('.', '')
+    string_turma = string_turma.replace('inft', 'inf1')
     arr = string_turma.split(' ')  # dividir a string
     while "" in arr:
         arr.remove("")  # remover os elementos vazios da string
@@ -202,11 +204,11 @@ def Dados_Blocos(string_turma, horas, dia):
                 'professor': '',
                 'sala': ''
             }
-        objecto_principal["horario"][dias]["info"].append(dados)  # adicionar dados ao objecto_principal
-        objecto_principal["horario"][dias]["info"].append(dados)  # adicionar dados ao objecto_principal
+        objeto_principal["horario"][dias]["info"].append(dados)  # adicionar dados ao objeto_principal
+        objeto_principal["horario"][dias]["info"].append(dados)  # adicionar dados ao objeto_principal
     else:
         if horas == 0:
-            print("Não tem aula")
+           print("Não tem aula")
         else:
             if string_turma.count(' ') > 4:
                 pos = -1
@@ -235,8 +237,9 @@ def Dados_Blocos(string_turma, horas, dia):
                         'professor': '',
                         'sala': ''
                     }
-                objecto_principal["horario"][dias]["info"].append(dados1)  # adicionar dados ao objecto_principal
+                objeto_principal["horario"][dias]["info"].append(dados1)  # adicionar dados ao objeto_principal
                 print(parte2)
+                string_dividida = parte2.split()
                 try:
                     # adicionar os dados retirados
                     dados2 = {
@@ -251,7 +254,7 @@ def Dados_Blocos(string_turma, horas, dia):
                         'professor': '',
                         'sala': ''
                     }
-                objecto_principal["horario"][dias]["info"].append(dados2)  # adicionar dados ao objecto_principal
+                objeto_principal["horario"][dias]["info"].append(dados2)  # adicionar dados ao objeto_principal
             else:
                 print(string_turma)
                 string_dividida = string_turma.split()  # dividir string
@@ -269,11 +272,11 @@ def Dados_Blocos(string_turma, horas, dia):
                         'professor': '',
                         'sala': ''
                     }
-                objecto_principal["horario"][dia]["info"].append(dados)  # adicionar dados ao objecto_principal
+                objeto_principal["horario"][dia]["info"].append(dados)  # adicionar dados ao objeto_principal
 
 
 def Turmas(i):
-    imagem = cv2.imread("Img_Processada_" + str(i) + '.jpeg')  # ler imagem
+    imagem = io.imread("Img_Processada_" + str(i) + '.jpeg')  # ler imagem
     imagem_turma = imagem[295:350, 95:350]  # recortar imagem
     nome_turmas = pytesseract.image_to_string(imagem_turma, config='--psm 6 -c preserve_interword_spaces=1')  # retirar os dados da imagem recortada
     # retirar caracteres desnecessários
@@ -286,15 +289,15 @@ def Turmas(i):
 
 def connectar_API(tempo, i, dados):
     i = i - 1
-    imagem_t = f"/root/PAP_G5/{tempo}/" + Turmas(i) + "_" + tempo + ".jpeg"  # caminho para a imagem
+    imagem_t = f"/home/ventosa/Desktop/PAP_G5-main/{tempo}/" + Turmas(i) + "_" + tempo + ".jpeg"  # caminho para a imagem
     url = 'https://apphorarios.pt/api/auth'  # url para aceder a autenticação da API
     r = requests.get(url, data={'apiKey': 'D)QN#)e+Cud`9,3uL.Rh7&pJD#qvFu)N'})  # request para ter o token de acesso a API
     json_r = r.json()
     token = json_r['token']  # retirar token
     print(token)
-    url = 'https://apphorarios.pt/horario/' + objecto_principal['turma'] + '/insert/image?token=' + token  # url para enviar dados para a API
+    url = 'https://apphorarios.pt/horario/' + objeto_principal['turma'] + '/insert/image?token=' + token  # url para enviar dados para a API
     requests.post(url, files={'horario': open(imagem_t, 'rb')})  # enviar dados para a API
-    url = 'https://apphorarios.pt/horario/' + objecto_principal['turma'] + '/insert/json?token=' + token
+    url = 'https://apphorarios.pt/horario/' + objeto_principal['turma'] + '/insert/json?token=' + token
     requests.post(url, json=dados)
 
 
@@ -323,18 +326,19 @@ else:
             if dias == 0:
                 if blocos == 0:
                     if img >= 1:
-                        Dados_Json = json.dumps(objecto_principal)  # função para transformar dados da string objecto_principal em JSON
+                        Dados_Json = json.dumps(objeto_principal)  # função para transformar dados da string objeto_principal em JSON
                         stringObj = json.loads(Dados_Json)
-                        # connectar_API(t, img, stringObj)  # função para connectar a API e envia os dados
+                        connectar_API(t, img, stringObj)  # função para connectar a API e envia os dados
+                        time.sleep(2)
                         print(Dados_Json)
-                        objecto_principal = limparObjecto()  # função para limpar a string objecto_principal
+                        objeto_principal = limparObjeto()  # função para limpar a string objeto_principal
                     if img >= pags:
                         fim = 1
                         break
                     nome_turma = Turmas(img)  # função para retirar o nome das turmas
-                    objecto_principal["turma"] = nome_turma  # adiciona o nome da turma no objecto_principal
+                    objeto_principal["turma"] = nome_turma  # adiciona o nome da turma no objeto_principal
             string, H = horario(dimensao_y1, dimensao_y2, dimensao_x1, dimensao_x2, img)  # função para retirar os dados do horario
-            Dados_Blocos(string, H, D_semana[dias])  # função para inserir os dados no objecto_principal
+            Dados_Blocos(string, H, D_semana[dias])  # função para inserir os dados no objeto_principal
             dimensao_y1 += 270
             dimensao_y2 += 265
             blocos += 1
