@@ -128,12 +128,12 @@ def dividir_pdf(verificacao, tempo):
     if verificacao == 1:
         images = convert_from_path("pdf_Horario.pdf")  # ler o pdf
         diretorio_existe = os.path.exists(
-            f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # verificar se o diretorio existe
+            f"/root/PAP_G5/{tempo}")  # verificar se o diretorio existe
         if diretorio_existe == 1:
-            os.chdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # mudar diretorio
+            os.chdir(f"/root/PAP_G5/{tempo}")  # mudar diretorio
         else:
-            os.mkdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # criar diretorio
-            os.chdir(f"/home/ventosa/Desktop/PAP_G5-main/{tempo}")  # mudar diretorio
+            os.mkdir(f"/root/PAP_G5/{tempo}")  # criar diretorio
+            os.chdir(f"/root/PAP_G5/{tempo}")  # mudar diretorio
         for paginas in range(len(images)):
             images[paginas].save('page' + str(paginas) + '.jpeg', 'jpeg')  # salvar imagens
         while imagens <= paginas:
@@ -154,8 +154,6 @@ def horario(y1, y2, x1, x2, i):
     margem = cv2.Canny(imagem_cortada, 50, 150)  # detectar as margens da imagem
     linhas = cv2.HoughLinesP(margem, 1, np.pi / 180, 100, minLineLength=100,
                              maxLineGap=10)  # detectar as linhas da imagem
-    cv2.imshow("recortado", imagem_cortada)  # mostrar imagem
-    cv2.waitKey(0)  # espera de um input do teclado para avançar
     string_turma = pytesseract.image_to_string(imagem_cortada, config='--psm 6 --oem 3 -c tessedit_create_tsv=1')  # retirar os dados da imagem
     # retirar caracteres desnecessários
     string_turma = string_turma.replace('_—', ' ')
@@ -168,6 +166,8 @@ def horario(y1, y2, x1, x2, i):
     string_turma = string_turma.replace('\n', ' ')
     string_turma = string_turma.replace('.', '')
     string_turma = string_turma.replace('inft', 'inf1')
+    string_turma = string_turma.replace('JOG', 'JV CJ')
+    string_turma = string_turma.replace('GJ', 'CJ')
     arr = string_turma.split(' ')  # dividir a string
     while "" in arr:
         arr.remove("")  # remover os elementos vazios da string
@@ -190,6 +190,7 @@ def Dados_Blocos(string_turma, horas, dia):
     string_turma = string_turma.replace('  ', ' ')  # remover caracteres desnecessários
     if horas == 2:
         string_dividida = string_turma.split()  # dividir string
+        print(string_dividida)
         try:
             # adicionar os dados retirados
             dados = {
@@ -289,7 +290,7 @@ def Turmas(i):
 
 def connectar_API(tempo, i, dados):
     i = i - 1
-    imagem_t = f"/home/ventosa/Desktop/PAP_G5-main/{tempo}/" + Turmas(i) + "_" + tempo + ".jpeg"  # caminho para a imagem
+    imagem_t = f"/root/PAP_G5/{tempo}/" + Turmas(i) + "_" + tempo + ".jpeg"  # caminho para a imagem
     url = 'https://apphorarios.pt/api/auth'  # url para aceder a autenticação da API
     r = requests.get(url, data={'apiKey': 'D)QN#)e+Cud`9,3uL.Rh7&pJD#qvFu)N'})  # request para ter o token de acesso a API
     json_r = r.json()
@@ -328,8 +329,7 @@ else:
                     if img >= 1:
                         Dados_Json = json.dumps(objeto_principal)  # função para transformar dados da string objeto_principal em JSON
                         stringObj = json.loads(Dados_Json)
-                        connectar_API(t, img, stringObj)  # função para connectar a API e envia os dados
-                        time.sleep(2)
+                        # connectar_API(t, img, stringObj)  # função para connectar a API e envia os dados
                         print(Dados_Json)
                         objeto_principal = limparObjeto()  # função para limpar a string objeto_principal
                     if img >= pags:
